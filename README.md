@@ -99,7 +99,7 @@ The Dockerfile installs PyTorch 2.10.0 CUDA 12.8 wheels, the official YuE2 relea
 6. Configure S3-compatible storage if callers need direct artifact URLs.
 7. Send generation requests to the endpoint's asynchronous `/run` operation for long songs.
 
-The worker uses Runpod `VolumeCache` around the Hugging Face cache. With a Network Volume attached, Runpod mirrors the cache through `/runpod-volume`; without one, the cache helper is best-effort and generation still works.
+The worker uses the normal Hugging Face cache. For Serverless workers with a Network Volume attached, set `HF_HOME=/runpod-volume/huggingface` so model downloads survive worker replacement. Without a Network Volume, leave the default local cache.
 
 ## Local handler test
 
