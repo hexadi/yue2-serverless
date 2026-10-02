@@ -40,4 +40,8 @@ def handler(job: dict) -> dict:
 
 
 if __name__ == "__main__":
+    if settings.preload:
+        print("Preloading YuE2 model before accepting jobs...", flush=True)
+        engine.warmup()
+        print("YuE2 model preload complete.", flush=True)
     runpod.serverless.start({"handler": handler})
