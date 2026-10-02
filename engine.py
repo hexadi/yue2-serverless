@@ -73,6 +73,9 @@ class YuE2Engine:
             )
         return self._pipe
 
+    def warmup(self) -> None:
+        self._load()
+
     def generate(self, data: dict[str, Any], output_dir: Path) -> dict[str, Any]:
         request = validate_request(data)
         pipe = self._load()
