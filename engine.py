@@ -6,8 +6,9 @@ from typing import Any
 
 from config import settings
 
-_ALLOWED = {"style", "tags", "lyrics", "cot", "seed", "abc", "cfg_scale", "id"}
+_ALLOWED = {"style", "tags", "lyrics", "cot", "seed", "abc", "cfg_scale", "id", "abc_sampling", "semantic_sampling"}
 _MODES = {"full", "melody", "off"}
+_SAMPLING_FIELDS = {"temperature", "top_p", "top_k", "repetition_penalty", "penalty_window", "min_tokens", "max_tokens"}
 
 
 def validate_request(data: Any) -> dict[str, Any]:
@@ -34,6 +35,16 @@ def validate_request(data: Any) -> dict[str, Any]:
 
     if data.get("abc") is not None and mode == "off":
         raise ValueError("abc requires cot=full or cot=melody")
+
+    for key in ("abc_sampling", "semantic_sampling"):
+        value = data.get(key)
+        if value is None:
+            continue
+        if not isinstance(value, dict):
+            raise ValueError(f"{key} must be a JSON object")
+        unknown_sampling = set(value) - _SAMPLING_FIELDS
+        if unknown_sampling:
+            raise ValueError(f"unsupported {key} fields: {sorted(unknown_sampling)}")
 
     clean = {k: v for k, v in data.items() if v is not None}
     clean.setdefault("cot", "full")
