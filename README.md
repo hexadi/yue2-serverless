@@ -27,9 +27,9 @@ This repository keeps the Runpod wrapper separate from the upstream YuE2 runtime
 }
 ```
 
-Supported generation fields are `style`, `lyrics`, `cot`, `seed`, `abc`, `cfg_scale`, and `id`.
+Supported generation fields are `style`, `lyrics`, `cot`, `seed`, `abc`, `cfg_scale`, `id`, `abc_sampling`, and `semantic_sampling`.
 
-`cot` can be `full`, `melody`, or `off`. Supplying `abc` requires `full` or `melody`.
+`cot` can be `full`, `melody`, or `off`. Supplying `abc` requires `full` or `melody`. For short smoke tests, you can cap semantic generation with e.g. `"semantic_sampling": {"min_tokens": 64, "max_tokens": 256}`.
 
 ## Response
 
