@@ -1,0 +1,89 @@
+from __future__ import annotations
+
+import threading
+from pathlib import Path
+from typing import Any
+
+from config import settings
+
+_ALLOWED = {"style", "tags", "lyrics", "cot", "seed", "abc", "cfg_scale", "id"}
+_MODES = {"full", "melody", "off"}
+
+
+def validate_request(data: Any) -> dict[str, Any]:
+    if not isinstance(data, dict):
+        raise ValueError("input must be a JSON object")
+
+    unknown = set(data) - _ALLOWED
+    if unknown:
+        raise ValueError(f"unsupported input fields: {sorted(unknown)}")
+
+    style = data.get("style")
+    tags = data.get("tags")
+    if style is None and tags is None:
+        raise ValueError("style is required")
+    if style is not None and tags is not None and style != tags:
+        raise ValueError("style and tags are aliases and cannot disagree")
+
+    if not isinstance(data.get("lyrics"), str):
+        raise ValueError("lyrics must be a string")
+
+    mode = data.get("cot", "full")
+    if mode not in _MODES:
+        raise ValueError("cot must be one of: full, melody, off")
+
+    if data.get("abc") is not None and mode == "off":
+        raise ValueError("abc requires cot=full or cot=melody")
+
+    clean = {k: v for k, v in data.items() if v is not None}
+    clean.setdefault("cot", "full")
+    return clean
+
+
+class YuE2Engine:
+    def __init__(self) -> None:
+        self._pipe = None
+        self._lock = threading.Lock()
+
+    def _load(self):
+        if self._pipe is not None:
+            return self._pipe
+
+        with self._lock:
+            if self._pipe is not None:
+                return self._pipe
+
+            from yue2 import YuE2Pipeline
+
+            settings.prepare()
+            self._pipe = YuE2Pipeline.from_pretrained(
+                settings.model,
+                vae=settings.vae,
+                revision=settings.model_revision,
+                vae_revision=settings.vae_revision,
+                device=settings.device,
+                memory_budget_gib=settings.memory_budget_gib,
+                backend=settings.backend,
+                quantization=settings.quantization,
+                offload_ar=settings.offload_ar,
+                local_files_only=settings.local_files_only,
+                token=settings.hf_token,
+                cache_dir=settings.hf_cache_dir,
+                progress=True,
+            )
+        return self._pipe
+
+    def generate(self, data: dict[str, Any], output_dir: Path) -> dict[str, Any]:
+        request = validate_request(data)
+        pipe = self._load()
+
+        # Baseline is one request per GPU worker. Keep this lock even if endpoint
+        # concurrency is accidentally raised.
+        with self._lock:
+            song = pipe(**request)
+            result = song.save_artifacts(output_dir)
+
+        return result
+
+
+engine = YuE2Engine()
