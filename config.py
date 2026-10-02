@@ -24,6 +24,7 @@ class Settings:
     quantization: str = os.getenv("YUE2_QUANTIZATION", "none")
     offload_ar: bool = _bool("YUE2_OFFLOAD_AR", False)
     local_files_only: bool = _bool("YUE2_LOCAL_FILES_ONLY", False)
+    preload: bool = _bool("YUE2_PRELOAD", True)
     hf_token: str | None = os.getenv("HF_TOKEN") or None
     hf_cache_dir: str = os.getenv("HF_HOME", "/root/.cache/huggingface")
     output_dir: str = os.getenv("YUE2_OUTPUT_DIR", "/tmp/yue2-output")
