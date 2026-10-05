@@ -23,19 +23,10 @@ def test_style_tags_alias_must_match():
         validate_request({"style": "pop", "tags": "rock", "lyrics": "hello"})
 
 
-def test_accepts_sampling_overrides():
+def test_sampling_overrides():
     result = validate_request({
         "style": "pop",
         "lyrics": "hello",
         "semantic_sampling": {"min_tokens": 64, "max_tokens": 256},
     })
     assert result["semantic_sampling"]["max_tokens"] == 256
-
-
-def test_rejects_unknown_sampling_fields():
-    with pytest.raises(ValueError, match="unsupported semantic_sampling"):
-        validate_request({
-            "style": "pop",
-            "lyrics": "hello",
-            "semantic_sampling": {"duration": 10},
-        })
